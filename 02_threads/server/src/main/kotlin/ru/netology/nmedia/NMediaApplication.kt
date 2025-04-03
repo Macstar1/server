@@ -7,6 +7,5 @@ import org.springframework.boot.runApplication
 class NMediaApplication
 
 fun main(args: Array<String>) {
-
     runApplication<NMediaApplication>(*args)
 }
