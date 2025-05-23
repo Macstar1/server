@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.4.4"
+    id("org.springframework.boot") version "3.5.0"
     id("io.spring.dependency-management") version "1.1.6"
     val kotlinVersion = "2.1.20"
     id("org.jetbrains.kotlin.plugin.jpa") version kotlinVersion
