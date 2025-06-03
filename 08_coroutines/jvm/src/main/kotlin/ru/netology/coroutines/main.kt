@@ -1,16 +1,15 @@
 package ru.netology.coroutines
 
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
+import ru.netology.coroutines.dto.Author
 import ru.netology.coroutines.dto.Comment
-import ru.netology.coroutines.dto.CommentWithAuthor
+import ru.netology.coroutines.dto.CommentDetails
 import ru.netology.coroutines.dto.Post
-import ru.netology.coroutines.dto.PostWithAuthor
-import ru.netology.coroutines.dto.PostWithComments
+import ru.netology.coroutines.dto.PostDetails
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.EmptyCoroutineContext
@@ -138,23 +137,24 @@ fun main() {
     with(CoroutineScope(EmptyCoroutineContext)) {
         launch {
             try {
-                val posts = getPosts(client)
-                val postsWithAuthors = posts.map { post ->
-                    async { getPostWithAuthor(client, post) }
-                }.awaitAll()
-                println(postsWithAuthors)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            try {
-                val posts = getPosts(client)
-                val postsWithComments = posts.map { post ->
+                val postsWithDetails = getPosts(client).map { post ->
                     async {
-                        val commentsWithAuthors = getCommentsWithAuthors(client, post.id)
-                        PostWithComments(post, commentsWithAuthors)
+                        // Получение автора поста
+                        val author = getAuthor(client, post.authorId)
+                        // Получение комментариев
+                        val comments = getComments(client, post.id)
+                        // Получение авторов комментариев
+                        val commentsWithAuthors = comments.map { comment ->
+                            async {
+                                val commentAuthor = getAuthor(client, comment.authorId)
+                                CommentDetails(comment, commentAuthor)
+                            }
+                        }.awaitAll()
+                        PostDetails(post, author, commentsWithAuthors)
                     }
                 }.awaitAll()
-                println(postsWithComments)
+
+                println(postsWithDetails)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -200,29 +200,7 @@ suspend fun getPosts(client: OkHttpClient): List<Post> =
 suspend fun getComments(client: OkHttpClient, id: Long): List<Comment> =
     makeRequest("$BASE_URL/api/slow/posts/$id/comments", client, object : TypeToken<List<Comment>>() {})
 
-
-suspend fun getPostWithAuthor(client: OkHttpClient, post: Post): PostWithAuthor {
-    return PostWithAuthor(post, getAuthorName(client, post.author))
+suspend fun getAuthor(client: OkHttpClient, authorId: Long): Author {
+    val url = "$BASE_URL/api/authors/$authorId"
+    return makeRequest(url, client, object : TypeToken<Author>() {})
 }
-
-suspend fun getAuthorName(client: OkHttpClient, author: String): String {
-    val url = "$BASE_URL/api/authors/$author"
-    val response = client.apiCall(url)
-    response.use {
-        if (!it.isSuccessful) throw RuntimeException(it.message)
-        val body = it.body ?: throw RuntimeException("null body")
-        val json = gson.fromJson(body.charStream(), JsonObject::class.java)
-        return json.get("name").asString
-    }
-}
-
-suspend fun getCommentsWithAuthors(client: OkHttpClient, postId: Long): List<CommentWithAuthor> =
-    coroutineScope {
-        val comments = getComments(client, postId)
-        comments.map { comment ->
-            async {
-                val authorName = getAuthorName(client, comment.author)
-                CommentWithAuthor(comment, authorName)
-            }
-        }.awaitAll()
-    }
