@@ -139,11 +139,8 @@ fun main() {
             try {
                 val postsWithDetails = getPosts(client).map { post ->
                     async {
-                        // Получение автора поста
                         val author = getAuthor(client, post.authorId)
-                        // Получение комментариев
                         val comments = getComments(client, post.id)
-                        // Получение авторов комментариев
                         val commentsWithAuthors = comments.map { comment ->
                             async {
                                 val commentAuthor = getAuthor(client, comment.authorId)
