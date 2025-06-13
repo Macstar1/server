@@ -1,5 +1,6 @@
 package ru.netology.nmedia.repository
 
+import android.content.res.Resources
 import androidx.lifecycle.*
 import okio.IOException
 import ru.netology.nmedia.api.*
@@ -48,10 +49,12 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
     override suspend fun removeById(id: Long) {
-        TODO("Not yet implemented")
+        dao.removeById(id)
     }
 
     override suspend fun likeById(id: Long) {
-        TODO("Not yet implemented")
+        val postEntity = dao.getById(id) ?: throw Resources.NotFoundException()
+        val updated = postEntity.copy(likes = postEntity.likes + 1)
+        dao.update(updated)
     }
 }

@@ -30,15 +30,21 @@ class FeedFragment : Fragment() {
 
         val adapter = PostsAdapter(object : OnInteractionListener {
             override fun onEdit(post: Post) {
-                viewModel.edit(post)
+                post.id?.let {
+                    viewModel.edit(post)
+                }
             }
 
             override fun onLike(post: Post) {
-                viewModel.likeById(post.id)
+                post.id?.let {
+                    viewModel.likeById(it)
+                }
             }
 
             override fun onRemove(post: Post) {
-                viewModel.removeById(post.id)
+                post.id?.let {
+                    viewModel.removeById(it)
+                }
             }
 
             override fun onShare(post: Post) {
