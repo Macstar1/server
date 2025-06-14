@@ -54,7 +54,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
-
+            // Удаление из базы только после успешного ответа API
             dao.removeById(id)
         } catch (e: IOException) {
             throw NetworkError

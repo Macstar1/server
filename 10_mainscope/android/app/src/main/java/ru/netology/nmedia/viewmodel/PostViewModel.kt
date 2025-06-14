@@ -98,7 +98,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun removeById(id: Long) = viewModelScope.launch {
         try {
             repository.removeById(id)
-            loadPosts()
+            // loadPosts() больше не нужен, т.к. данные обновляются через LiveData
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
         }
