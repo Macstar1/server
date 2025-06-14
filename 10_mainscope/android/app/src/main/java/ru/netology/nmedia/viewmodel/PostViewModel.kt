@@ -90,7 +90,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun likeById(id: Long) = viewModelScope.launch {
         try {
             repository.likeById(id)
-            loadPosts()
         } catch (e: Exception) {
             _dataState.value = FeedModelState(error = true)
         }
