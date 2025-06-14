@@ -49,12 +49,23 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
     override suspend fun removeById(id: Long) {
-        dao.removeById(id)
+        val response = PostsApi.service.removeById(id)
+        if (response.isSuccessful) {
+            dao.removeById(id)
+        } else {
+            throw ApiError(response.code(), response.message())
+        }
     }
 
     override suspend fun likeById(id: Long) {
-        val postEntity = dao.getById(id) ?: throw Resources.NotFoundException()
-        val updated = postEntity.copy(likes = postEntity.likes + 1)
-        dao.update(updated)
+        val response = PostsApi.service.likeById(id)
+        if (response.isSuccessful) {
+            val post = response.body() ?: throw ApiError(-1, "No response body")
+            val postEntity = PostEntity.fromDto(post)
+            dao.update(postEntity)
+        } else {
+            throw ApiError(response.code(), response.message())
+        }
     }
+
 }
